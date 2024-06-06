@@ -26,12 +26,6 @@
         android:theme="@style/Theme.BeaconScanner"
         tools:targetApi="31">
         <activity
-            android:name=".BleAdvertisingActivity"
-            android:exported="false" />
-        <activity
-            android:name=".MainActivity"
-            android:exported="false" />
-        <activity
             android:name=".MainActivityBLE"
             android:exported="true">
             <intent-filter>

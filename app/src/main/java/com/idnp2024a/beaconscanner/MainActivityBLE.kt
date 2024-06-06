@@ -14,8 +14,6 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.location.LocationManagerCompat
 import com.idnp2024a.beaconscanner.permissions.BTPermissions
-import com.idnp2024a.beaconscanner.permissions.Permission
-import com.idnp2024a.beaconscanner.permissions.PermissionManager
 
 
 class MainActivityBLE : AppCompatActivity() {
@@ -30,13 +28,7 @@ class MainActivityBLE : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        //enableEdgeToEdge()
         setContentView(R.layout.activity_main_ble)
-        /*        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-                    val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-                    v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-                    insets
-                }*/
 
         BTPermissions(this).check()
         initBluetooth()
@@ -75,7 +67,7 @@ class MainActivityBLE : AppCompatActivity() {
     fun initBluetooth() {
 
         bluetoothManager = getSystemService(BluetoothManager::class.java)
-        bluetoothAdapter = bluetoothManager!!.adapter
+        bluetoothAdapter = bluetoothManager.adapter
 
         if (bluetoothAdapter != null) {
             btScanner = bluetoothAdapter.bluetoothLeScanner
@@ -93,7 +85,8 @@ class MainActivityBLE : AppCompatActivity() {
                 .rationale("Bluetooth permission is needed")
                 .checkPermission { isgranted ->
                     if (isgranted) {
-                        btScanner!!.startScan(bleScanCallback)
+                        Log.d(TAG, "Everything okey")
+                        btScanner.startScan(bleScanCallback)
                     } else {
                         Log.d(TAG, "Alert you don't have Bluetooth permission")
                     }
@@ -127,48 +120,15 @@ class MainActivityBLE : AppCompatActivity() {
 
     @SuppressLint("MissingPermission")
     val onScanResultAction: (ScanResult?) -> Unit = { result ->
+        Log.d(TAG, "onScanResultAction ")
+
         val scanRecord = result?.scanRecord
         val beacon = Beacon(result?.device?.address)
         beacon.manufacturer = result?.device?.name
         beacon.rssi = result?.rssi
-        if (scanRecord != null && beacon.manufacturer == "ESP32 Beacon") {
+        //beacon.manufacturer == "ESP32 Beacon
+        if (scanRecord != null) {
             scanRecord?.bytes?.let { decodeiBeacon(it, beacon.rssi) }
-
-            /*
-            Log.d(TAG, "ScanRecord:" + scanRecord?.bytes?.let { Utils.toHexString(it) })
-            val iBeaconManufactureData =
-                scanRecord.getManufacturerSpecificData(0X004c)// fake Apple 0x004C LSB (ENDIAN_CHANGE_U16!)
-
-            if (iBeaconManufactureData != null && iBeaconManufactureData.size >= 23) {
-                Log.d(TAG, "ManufacturerSpecificData:" + Utils.toHexString(iBeaconManufactureData))
-                val iBeaconUUID = Utils.toHexString(iBeaconManufactureData.copyOfRange(2, 18))
-                val major = Integer.parseInt(
-                    Utils.toHexString(iBeaconManufactureData.copyOfRange(18, 20)),
-                    16
-                )
-                val minor = Integer.parseInt(
-                    Utils.toHexString(iBeaconManufactureData.copyOfRange(20, 22)),
-                    16
-                )
-                val txPower = Integer.parseInt(
-                    Utils.toHexString(iBeaconManufactureData.copyOfRange(22, 23)),
-                    16
-                )
-
-                beacon.type = Beacon.beaconType.iBeacon
-                beacon.uuid = iBeaconUUID
-                beacon.major = major
-                beacon.minor = minor
-
-                var beacon_manufacturer = beacon.manufacturer
-                var beacon_rssi = beacon.rssi
-                var beacon_type = beacon.type
-                Log.e(
-                    TAG,
-                    "manufacturer:$beacon_manufacturer rssi:$beacon_rssi type:$beacon_type iBeaconUUID:$iBeaconUUID major:$major minor:$minor txPower:$txPower"
-                )
-            }
-            */
         }
 
     }

@@ -14,14 +14,15 @@ class BTPermissions(private val activity: MainActivityBLE) {
     private lateinit var permissionsList: ArrayList<String>
     private var permissionsCount = 0
     private lateinit var alertDialog: AlertDialog
+    private var dialogShown = false
 
     val permissions = arrayOf(
-        android.Manifest.permission.BLUETOOTH_CONNECT,
-        android.Manifest.permission.BLUETOOTH_SCAN,
+        //android.Manifest.permission.BLUETOOTH_CONNECT,
+        //android.Manifest.permission.BLUETOOTH_SCAN,
         android.Manifest.permission.ACCESS_COARSE_LOCATION,
         android.Manifest.permission.ACCESS_FINE_LOCATION,
         android.Manifest.permission.BLUETOOTH_ADMIN,
-        android.Manifest.permission.BLUETOOTH_ADVERTISE,
+        //android.Manifest.permission.BLUETOOTH_ADVERTISE,
     )
 
     fun check() {
@@ -59,56 +60,6 @@ class BTPermissions(private val activity: MainActivityBLE) {
                 Log.d(TAG, "All permissions are granted!")
             }
         }
-    /*
-    { result ->
-        val list = ArrayList(result.values)
-        permissionsList = ArrayList<String>()
-        permissionsCount = 0
-        for (i in list.indices) {
-            if (activity.shouldShowRequestPermissionRationale(permissions.get(i))) {
-                permissionsList.add(permissions.get(i))
-            } else if (!hasPermission(activity, permissions.get(i))) {
-                permissionsCount++
-            }
-        }
-        if (permissionsList.size > 0) {
-            //Some permissions are denied and can be asked again.
-            askForPermissions(permissionsList)
-        } else if (permissionsCount > 0) {
-            //Show alert dialog
-            showPermissionDialog()
-        } else {
-            //All permissions granted. Do your stuff 🤞
-            Log.d("CCCCCC", "All permissions are granted!")
-        }
-    }
-*/
-    /*    var permissionsLauncher: ActivityResultLauncher<Array<String>> =
-            activity.registerForActivityResult<Array<String>, Map<String, Boolean>>(
-                ActivityResultContracts.RequestMultiplePermissions()
-            ) { result ->
-                val list = ArrayList(result.values)
-                permissionsList = ArrayList<String>()
-                permissionsCount = 0
-                for (i in list.indices) {
-                    if (activity.shouldShowRequestPermissionRationale(permissions.get(i))) {
-                        permissionsList.add(permissions.get(i))
-                    } else if (!hasPermission(activity, permissions.get(i))) {
-                        permissionsCount++
-                    }
-                }
-                if (permissionsList.size > 0) {
-                    //Some permissions are denied and can be asked again.
-                    askForPermissions(permissionsList)
-                } else if (permissionsCount > 0) {
-                    //Show alert dialog
-                    showPermissionDialog()
-                } else {
-                    //All permissions granted. Do your stuff 🤞
-                    Log.d("CCCCCC", "All permissions are granted!")
-                }
-            }*/
-
     private fun hasPermission(context: Context, permissionStr: String): Boolean {
         return ContextCompat.checkSelfPermission(
             context,
@@ -135,16 +86,18 @@ class BTPermissions(private val activity: MainActivityBLE) {
 
 
     private fun showPermissionDialog() {
-        val builder: AlertDialog.Builder = AlertDialog.Builder(activity)
-        builder.setTitle("Permission required")
-            .setMessage("Some permissions are need to be allowed to use this app without any problems.")
-            .setPositiveButton("Settings") { dialog, which ->
-                dialog.dismiss()
-            }
-        if (alertDialog == null) {
+        if (!dialogShown) {
+            val builder: AlertDialog.Builder = AlertDialog.Builder(activity)
+            builder.setTitle("Permission required")
+                .setMessage("Some permissions are need to be allowed to use this app without any problems.")
+                .setPositiveButton("Settings") { dialog, which ->
+                    dialog.dismiss()
+                }
+
             alertDialog = builder.create()
-            if (!alertDialog!!.isShowing()) {
-                alertDialog!!.show()
+            if (!alertDialog.isShowing) {
+                alertDialog.show()
+                dialogShown = true
             }
         }
     }
