@@ -42,9 +42,10 @@ class MainActivityBLE : AppCompatActivity() {
         val btnStop = findViewById<Button>(R.id.btnStop)
         txtMessage = findViewById(R.id.txtMessage)
 
+        val scanCallBack  = createBleScanCallback();
         btnAdvertising.setOnClickListener { handleAdvertisingClick() }
-        btnStart.setOnClickListener { handleStartClick() }
-        btnStop.setOnClickListener { handleStopClick() }
+        btnStart.setOnClickListener { handleStartClick(scanCallBack) }
+        btnStop.setOnClickListener { handleStopClick(scanCallBack) }
     }
 
     private fun handleAdvertisingClick() {
@@ -52,18 +53,18 @@ class MainActivityBLE : AppCompatActivity() {
 
     }
 
-    private fun handleStartClick() {
+    private fun handleStartClick(bleScanCallback: BleScanCallback) {
         Log.i(TAG, "Press start scan button");
         if (isLocationEnabled()) {
-            bluetoothScanStart(createBleScanCallback())
+            bluetoothScanStart(bleScanCallback)
         } else {
             showPermissionDialog()
         }
     }
 
-    private fun handleStopClick() {
+    private fun handleStopClick(bleScanCallback: BleScanCallback) {
         Log.i(TAG, "Press stop scan button");
-        bluetoothScanStop(createBleScanCallback())
+        bluetoothScanStop(bleScanCallback)
     }
 
     private fun initBluetooth() {
@@ -107,8 +108,10 @@ class MainActivityBLE : AppCompatActivity() {
     }
 
     private fun isLocationEnabled(): Boolean {
-        val locationManager = getSystemService(LOCATION_SERVICE) as LocationManager
-        return LocationManagerCompat.isLocationEnabled(locationManager)
+        Log.i(TAG, "Verificando permiso de localizacion");
+        val locationManager = getSystemService(LOCATION_SERVICE) as LocationManager;
+        Log.d(TAG, "Permiso localizacion: "+ LocationManagerCompat.isLocationEnabled(locationManager));
+        return LocationManagerCompat.isLocationEnabled(locationManager);
     }
 
     private fun showPermissionDialog() {
