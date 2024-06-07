@@ -22,38 +22,51 @@ import com.idnp2024a.beaconscanner.permissions.BTPermissions
 
 class MainActivityBLE : AppCompatActivity() {
 
+    // Constante para etiquetar los logs
     private val TAG: String = "MainActivityBLE"
+    // Diálogo de alerta para mostrar mensajes al usuario
     private var alertDialog: AlertDialog? = null
+    // Administrador de Bluetooth
     private lateinit var bluetoothManager: BluetoothManager
+    // Scanner de Bluetooth LE
     private lateinit var btScanner: BluetoothLeScanner
+    // Adaptador de Bluetooth
     private lateinit var bluetoothAdapter: BluetoothAdapter
-    private lateinit var txtMessage: TextView;
+    // TextView para mostrar mensajes en la interfaz
+    private lateinit var txtMessage: TextView
+    // Gestor de permisos
     private val permissionManager = PermissionManager.from(this)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main_ble)
 
+        // Comprobar y solicitar permisos de Bluetooth
         BTPermissions(this).check()
+        // Inicializar componentes de Bluetooth
         initBluetooth()
 
+        // Obtener referencias a los botones y el TextView desde el layouts
         val btnAdversting = findViewById<Button>(R.id.btnAdversting)
         val btnStart = findViewById<Button>(R.id.btnStart)
         val btnStop = findViewById<Button>(R.id.btnStop)
         txtMessage = findViewById(R.id.txtMessage)
 
 
+        // Crear el callback para el escaneo de BLE
         val bleScanCallback = BleScanCallback(
             onScanResultAction,
             onBatchScanResultAction,
             onScanFailedAction
         )
 
+        // Configurar listeners para los botones
         btnAdversting.setOnClickListener {
 
         }
 
         btnStart.setOnClickListener {
+            // Iniciar escaneo si la localización está habilitada, de lo contrario mostrar diálogo
             if (isLocationEnabled()) {
                 bluetoothScanStart(bleScanCallback)
             } else {
@@ -62,11 +75,13 @@ class MainActivityBLE : AppCompatActivity() {
         }
 
         btnStop.setOnClickListener {
+            // Detener el escaneo
             bluetoothScanStop(bleScanCallback)
         }
 
     }
 
+    // Inicializar componentes de Bluetooth
     fun initBluetooth() {
 
         bluetoothManager = getSystemService(BluetoothManager::class.java)
@@ -79,6 +94,7 @@ class MainActivityBLE : AppCompatActivity() {
         }
     }
 
+    // Iniciar escaneo de BLE
     private fun bluetoothScanStart(bleScanCallback: BleScanCallback) {
         Log.d(TAG, "btScan ...1")
         if (btScanner != null) {
@@ -102,12 +118,13 @@ class MainActivityBLE : AppCompatActivity() {
 
     }
 
+    // Comprobar si la localización está habilitada
     private fun isLocationEnabled(): Boolean {
         val locationManager = getSystemService(LOCATION_SERVICE) as LocationManager
         return LocationManagerCompat.isLocationEnabled(locationManager)
     }
 
-
+    // Detener el escaneo de BLE
     @SuppressLint("MissingPermission")
     private fun bluetoothScanStop(bleScanCallback: BleScanCallback) {
         Log.d(TAG, "btScan ...1")
@@ -121,6 +138,7 @@ class MainActivityBLE : AppCompatActivity() {
 
     }
 
+    // Acción a realizar cuando se obtiene un resultado de escaneo
     @SuppressLint("MissingPermission")
     val onScanResultAction: (ScanResult?) -> Unit = { result ->
         Log.d(TAG, "onScanResultAction ")
@@ -130,6 +148,8 @@ class MainActivityBLE : AppCompatActivity() {
         beacon.manufacturer = result?.device?.name
         beacon.rssi = result?.rssi
         //beacon.manufacturer == "ESP32 Beacon
+        Log.d(TAG, "Scan: " + beacon)
+
         if (scanRecord != null) {
             scanRecord?.bytes?.let {
                 val parserBeacon = BeaconParser.parseIBeacon(it, beacon.rssi)
@@ -139,16 +159,19 @@ class MainActivityBLE : AppCompatActivity() {
 
     }
 
+    // Acción a realizar cuando se obtienen resultados de escaneo en lote
     val onBatchScanResultAction: (MutableList<ScanResult>?) -> Unit = {
         if (it != null) {
             Log.d(TAG, "BatchScanResult " + it.toString())
         }
     }
 
+    // Acción a realizar cuando el escaneo falla
     val onScanFailedAction: (Int) -> Unit = {
         Log.d(TAG, "ScanFailed " + it.toString())
     }
 
+    // Mostrar un diálogo de permiso
     private fun showPermissionDialog() {
 
         val builder: AlertDialog.Builder = AlertDialog.Builder(this)
