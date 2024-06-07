@@ -1,7 +1,5 @@
 package com.idnp2024a.beaconscanner.BeaconScanerLibrary
 
-import android.util.Log
-
 class BeaconParser {
 
     companion object {
@@ -21,13 +19,13 @@ class BeaconParser {
             val minor = Integer.parseInt(Utils.toHexString(data.copyOfRange(27, 29)), 16)
             val txPower = Integer.parseInt(Utils.toHexString(data.copyOfRange(29, 30)), 16)
 
-            val factor = (-1 * txPower - rssi!!) / (10 * 4.0)
-            val distance = Math.pow(10.0, factor)
+            //val factor = (-1 * txPower - rssi!!) / (10 * 4.0)
+            //val distance = Math.pow(10.0, factor)
 
-            Log.d(
+            /*Log.d(
                 TAG,
-                "DECODE dataLen:$dataLen dataType:$dataType leFlag:$leFlag len:$len type:$type subtype:$subtype subtypeLen:$subtypeLen company:$company UUID:$iBeaconUUID major:$major minor:$minor txPower:$txPower distance:$distance"
-            )
+                "DECODE dataLen:$dataLen dataType:$dataType leFlag:$leFlag len:$len type:$type subtype:$subtype subtypeLen:$subtypeLen company:$company UUID:$iBeaconUUID major:$major minor:$minor txPower:$txPower"
+            )*/
 
             return Beacon(
                 macAddress = null,
@@ -36,7 +34,8 @@ class BeaconParser {
                 uuid = iBeaconUUID,
                 major = major,
                 minor = minor,
-                rssi = rssi
+                rssi = rssi,
+                txPower = txPower
             )
         }
     }
