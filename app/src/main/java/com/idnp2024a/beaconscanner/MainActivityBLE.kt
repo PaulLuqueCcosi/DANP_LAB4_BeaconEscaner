@@ -55,11 +55,26 @@ class MainActivityBLE : AppCompatActivity() {
 
     private fun handleStartClick(bleScanCallback: BleScanCallback) {
         Log.i(TAG, "Press start scan button");
-        if (isLocationEnabled()) {
-            bluetoothScanStart(bleScanCallback)
-        } else {
-            showPermissionDialog()
+        if (!isLocationEnabled() || !isBluetoothEnabled()) {
+            showPermissionDialog("Servicios no activados", "La localizacion y el Bluetooth tienen que estar activos");
+            return
         }
+
+        bluetoothScanStart(bleScanCallback)
+
+    }
+
+    private fun isLocationEnabled(): Boolean {
+        Log.i(TAG, "Verificando localizacion activo");
+        val locationManager = getSystemService(LOCATION_SERVICE) as LocationManager;
+        Log.d(TAG, "Localizacion activado: "+ LocationManagerCompat.isLocationEnabled(locationManager));
+        return LocationManagerCompat.isLocationEnabled(locationManager);
+    }
+
+    private fun isBluetoothEnabled(): Boolean {
+        Log.i(TAG, "Verificando Bluetooth activo");
+        Log.d(TAG, "Bluetooth activado: "+ bluetoothAdapter.isEnabled);
+        return bluetoothAdapter.isEnabled;
     }
 
     private fun handleStopClick(bleScanCallback: BleScanCallback) {
@@ -82,7 +97,7 @@ class MainActivityBLE : AppCompatActivity() {
         Log.d(TAG, "Starting Bluetooth scan...")
         if (btScanner != null) {
             permissionManager
-                .request(Permission.Location)
+                .request(Permission.Location, Permission.Bluetooth)
                 .rationale("Bluetooth permission is needed")
                 .checkPermission { isGranted ->
                     if (isGranted) {
@@ -107,17 +122,11 @@ class MainActivityBLE : AppCompatActivity() {
         }
     }
 
-    private fun isLocationEnabled(): Boolean {
-        Log.i(TAG, "Verificando permiso de localizacion");
-        val locationManager = getSystemService(LOCATION_SERVICE) as LocationManager;
-        Log.d(TAG, "Permiso localizacion: "+ LocationManagerCompat.isLocationEnabled(locationManager));
-        return LocationManagerCompat.isLocationEnabled(locationManager);
-    }
 
-    private fun showPermissionDialog() {
+    private fun showPermissionDialog(title: String, message: String) {
         val builder: AlertDialog.Builder = AlertDialog.Builder(this)
-        builder.setTitle("Alerta")
-            .setMessage("El servicio de localización no está activo")
+        builder.setTitle(title)
+            .setMessage(message)
             .setPositiveButton("Close") { dialog, _ -> dialog.dismiss() }
 
         if (alertDialog == null) {
@@ -137,7 +146,6 @@ class MainActivityBLE : AppCompatActivity() {
         )
     }
 
-    @SuppressLint("MissingPermission")
     private val onScanResultAction: (ScanResult?) -> Unit = { result ->
         Log.d(TAG, "onScanResultAction")
 
