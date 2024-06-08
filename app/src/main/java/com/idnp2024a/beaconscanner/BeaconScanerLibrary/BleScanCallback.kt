@@ -1,4 +1,4 @@
-package com.idnp2024a.beaconscanner
+package com.idnp2024a.beaconscanner.BeaconScanerLibrary
 
 import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanResult

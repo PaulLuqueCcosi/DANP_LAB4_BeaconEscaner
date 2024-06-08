@@ -1,4 +1,4 @@
-package com.idnp2024a.beaconscanner.permissions
+package com.idnp2024a.beaconscanner
 
 import android.Manifest.permission.ACCESS_COARSE_LOCATION
 import android.Manifest.permission.ACCESS_FINE_LOCATION
