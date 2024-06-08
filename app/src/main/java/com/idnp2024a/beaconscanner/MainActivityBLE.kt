@@ -1,6 +1,5 @@
 package com.idnp2024a.beaconscanner
 
-import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
 import android.bluetooth.le.BluetoothLeScanner
@@ -177,7 +176,9 @@ class MainActivityBLE : AppCompatActivity() {
             val parsedBeacon = BeaconParser.parseIBeacon(it, beacon.rssi)
             txtMessage.text = parsedBeacon.toString()
             var distance = parsedBeacon.calculateDistance(parsedBeacon.txPower!!, parsedBeacon.rssi!!, 3.0)
-            txtMessage.setText(txtMessage.text.toString() + "\n distance: $distance")
+            txtMessage.setText(txtMessage.text.toString() + "\n distance:\n$distance")
+            var distanceAverageFilter = parsedBeacon.calculateDistanceAverageFilter(parsedBeacon.txPower!!, parsedBeacon.rssi!!, 3.0)
+            txtMessage.setText(txtMessage.text.toString() + "\n distanceFilter:\n$distanceAverageFilter")
 
         }
     }

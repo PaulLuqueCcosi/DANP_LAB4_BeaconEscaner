@@ -23,9 +23,9 @@ class Beacon(
         return true
     }
 
-    private val movingAverageFilter = MovingAverageFilter(5)
-    fun calculateDistance(txPower: Int, rssi: Int, n: Double): Double? {
-        return movingAverageFilter.calculateDistance(txPower, rssi, n);
+//    private val movingAverageFilter = MovingAverageFilter(5)
+    fun calculateDistanceAverageFilter(txPower: Int, rssi: Int, n: Double): Double? {
+        return MovingAverageFilter.calculateDistance(txPower, rssi, n)
     }
 
     override fun hashCode(): Int {
@@ -33,5 +33,12 @@ class Beacon(
     }
     override fun toString(): String {
         return "Beacon(macAddress=$macAddress, manufacturer=$manufacturer, type=$type, uuid=$uuid, major=$major, minor=$minor, rssi=$rssi, TxPower=$txPower)"
+    }
+
+    fun calculateDistance(txPower: Int, rssi: Int, N: Double): Any {
+        val factor = (txPower - rssi) / (10 * N)
+        val distance = Math.pow(10.0, factor)
+        return distance;
+
     }
 }
