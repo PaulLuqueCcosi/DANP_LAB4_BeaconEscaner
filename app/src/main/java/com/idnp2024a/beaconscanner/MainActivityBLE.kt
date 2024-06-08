@@ -61,7 +61,6 @@ class MainActivityBLE : AppCompatActivity() {
         }
 
         bluetoothScanStart(bleScanCallback)
-
     }
 
     private fun isLocationEnabled(): Boolean {
@@ -97,7 +96,7 @@ class MainActivityBLE : AppCompatActivity() {
         Log.d(TAG, "Starting Bluetooth scan...")
         if (btScanner != null) {
             permissionManager
-                .request(Permission.Location, Permission.Bluetooth)
+                .request(Permission.Bluetooth)
                 .rationale("Bluetooth permission is needed")
                 .checkPermission { isGranted ->
                     if (isGranted) {
@@ -112,14 +111,24 @@ class MainActivityBLE : AppCompatActivity() {
         }
     }
 
-    @SuppressLint("MissingPermission")
     private fun bluetoothScanStop(bleScanCallback: BleScanCallback) {
         Log.d(TAG, "Stopping Bluetooth scan...")
         if (btScanner != null) {
-            btScanner.stopScan(bleScanCallback)
+            permissionManager
+                .request(Permission.Bluetooth)
+                .rationale("Bluetooth permission is needed")
+                .checkPermission { isGranted ->
+                    if (isGranted) {
+                        Log.d(TAG, "Permissions granted, stop scan.")
+                        btScanner.stopScan(bleScanCallback)
+                    } else {
+                        Log.d(TAG, "Bluetooth permission not granted.")
+                    }
+                }
         } else {
             Log.d(TAG, "BluetoothLeScanner is null")
         }
+
     }
 
 
