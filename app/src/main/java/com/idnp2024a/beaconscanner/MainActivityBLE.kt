@@ -4,7 +4,9 @@ import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
 import android.bluetooth.le.BluetoothLeScanner
+import android.bluetooth.le.ScanFilter
 import android.bluetooth.le.ScanResult
+import android.bluetooth.le.ScanSettings
 import android.location.LocationManager
 import android.os.Bundle
 import android.util.Log
@@ -101,7 +103,13 @@ class MainActivityBLE : AppCompatActivity() {
                 .checkPermission { isGranted ->
                     if (isGranted) {
                         Log.d(TAG, "Permissions granted, starting scan.")
-                        btScanner.startScan(bleScanCallback)
+                        val scanFilter = ScanFilter.Builder()
+                            .setManufacturerData(0x004C, byteArrayOf(0x02, 0x15)) // Ejemplo para iBeacon
+                            .build()
+                        val scanSettings = ScanSettings.Builder()
+                            .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
+                            .build()
+                        btScanner.startScan(listOf(scanFilter), scanSettings,bleScanCallback)
                     } else {
                         Log.d(TAG, "Bluetooth permission not granted.")
                     }
@@ -168,6 +176,9 @@ class MainActivityBLE : AppCompatActivity() {
         scanRecord?.bytes?.let {
             val parsedBeacon = BeaconParser.parseIBeacon(it, beacon.rssi)
             txtMessage.text = parsedBeacon.toString()
+            var distance = parsedBeacon.calculateDistance(parsedBeacon.txPower!!, parsedBeacon.rssi!!)
+            txtMessage.setText(txtMessage.text.toString() + "\n distance: $distance")
+
         }
     }
 

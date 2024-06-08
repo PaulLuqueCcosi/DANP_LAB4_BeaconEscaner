@@ -32,6 +32,6 @@ class Beacon(
         return uuid?.hashCode() ?: 0
     }
     override fun toString(): String {
-        return "Beacon(macAddress=$macAddress, manufacturer=$manufacturer, type=$type, uuid=$uuid, major=$major, minor=$minor, rssi=$rssi)"
+        return "Beacon(macAddress=$macAddress, manufacturer=$manufacturer, type=$type, uuid=$uuid, major=$major, minor=$minor, rssi=$rssi, TxPower=$txPower)"
     }
 }
