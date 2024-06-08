@@ -1,10 +1,11 @@
 package com.idnp2024a.beaconscanner
 
-import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
 import android.bluetooth.le.BluetoothLeScanner
+import android.bluetooth.le.ScanFilter
 import android.bluetooth.le.ScanResult
+import android.bluetooth.le.ScanSettings
 import android.location.LocationManager
 import android.os.Bundle
 import android.util.Log
@@ -16,9 +17,7 @@ import androidx.core.location.LocationManagerCompat
 import com.idnp2024a.beaconscanner.BeaconScanerLibrary.Beacon
 import com.idnp2024a.beaconscanner.BeaconScanerLibrary.BeaconParser
 import com.idnp2024a.beaconscanner.BeaconScanerLibrary.BleScanCallback
-import com.idnp2024a.beaconscanner.BeaconScanerLibrary.Utils
 import com.idnp2024a.beaconscanner.permissions.BTPermissions
-
 
 class MainActivityBLE : AppCompatActivity() {
 
@@ -27,48 +26,63 @@ class MainActivityBLE : AppCompatActivity() {
     private lateinit var bluetoothManager: BluetoothManager
     private lateinit var btScanner: BluetoothLeScanner
     private lateinit var bluetoothAdapter: BluetoothAdapter
-    private lateinit var txtMessage: TextView;
+    private lateinit var txtMessage: TextView
     private val permissionManager = PermissionManager.from(this)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main_ble)
-
+        initUI()
         BTPermissions(this).check()
         initBluetooth()
+    }
 
-        val btnAdversting = findViewById<Button>(R.id.btnAdversting)
+    private fun initUI() {
+        val btnAdvertising = findViewById<Button>(R.id.btnAdversting)
         val btnStart = findViewById<Button>(R.id.btnStart)
         val btnStop = findViewById<Button>(R.id.btnStop)
         txtMessage = findViewById(R.id.txtMessage)
 
+        val scanCallBack  = createBleScanCallback();
+        btnAdvertising.setOnClickListener { handleAdvertisingClick() }
+        btnStart.setOnClickListener { handleStartClick(scanCallBack) }
+        btnStop.setOnClickListener { handleStopClick(scanCallBack) }
+    }
 
-        val bleScanCallback = BleScanCallback(
-            onScanResultAction,
-            onBatchScanResultAction,
-            onScanFailedAction
-        )
-
-        btnAdversting.setOnClickListener {
-
-        }
-
-        btnStart.setOnClickListener {
-            if (isLocationEnabled()) {
-                bluetoothScanStart(bleScanCallback)
-            } else {
-                showPermissionDialog()
-            }
-        }
-
-        btnStop.setOnClickListener {
-            bluetoothScanStop(bleScanCallback)
-        }
+    private fun handleAdvertisingClick() {
+        Log.i(TAG, "Press start advertising button");
 
     }
 
-    fun initBluetooth() {
+    private fun handleStartClick(bleScanCallback: BleScanCallback) {
+        Log.i(TAG, "Press start scan button");
+        if (!isLocationEnabled() || !isBluetoothEnabled()) {
+            showPermissionDialog("Servicios no activados", "La localizacion y el Bluetooth tienen que estar activos");
+            return
+        }
 
+        bluetoothScanStart(bleScanCallback)
+    }
+
+    private fun isLocationEnabled(): Boolean {
+        Log.i(TAG, "Verificando localizacion activo");
+        val locationManager = getSystemService(LOCATION_SERVICE) as LocationManager;
+        Log.d(TAG, "Localizacion activado: "+ LocationManagerCompat.isLocationEnabled(locationManager));
+        return LocationManagerCompat.isLocationEnabled(locationManager);
+    }
+
+    private fun isBluetoothEnabled(): Boolean {
+        Log.i(TAG, "Verificando Bluetooth activo");
+        Log.d(TAG, "Bluetooth activado: "+ bluetoothAdapter.isEnabled);
+        return bluetoothAdapter.isEnabled;
+    }
+
+    private fun handleStopClick(bleScanCallback: BleScanCallback) {
+        Log.i(TAG, "Press stop scan button");
+        bluetoothScanStop(bleScanCallback)
+    }
+
+    private fun initBluetooth() {
         bluetoothManager = getSystemService(BluetoothManager::class.java)
         bluetoothAdapter = bluetoothManager.adapter
 
@@ -80,91 +94,100 @@ class MainActivityBLE : AppCompatActivity() {
     }
 
     private fun bluetoothScanStart(bleScanCallback: BleScanCallback) {
-        Log.d(TAG, "btScan ...1")
+        Log.d(TAG, "Starting Bluetooth scan...")
         if (btScanner != null) {
-            Log.d(TAG, "btScan ...2")
             permissionManager
-                .request(Permission.Location)
+                .request(Permission.Bluetooth)
                 .rationale("Bluetooth permission is needed")
-                .checkPermission { isgranted ->
-                    if (isgranted) {
-                        Log.d(TAG, "Everything okey")
-                        btScanner.startScan(bleScanCallback)
+                .checkPermission { isGranted ->
+                    if (isGranted) {
+                        Log.d(TAG, "Permissions granted, starting scan.")
+                        val scanFilter = ScanFilter.Builder()
+                            .setManufacturerData(0x004C, byteArrayOf(0x02, 0x15)) // Ejemplo para iBeacon
+                            .build()
+                        val scanSettings = ScanSettings.Builder()
+                            .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
+                            .build()
+                        btScanner.startScan(listOf(scanFilter), scanSettings,bleScanCallback)
                     } else {
-                        Log.d(TAG, "Alert you don't have Bluetooth permission")
+                        Log.d(TAG, "Bluetooth permission not granted.")
                     }
-
                 }
-
         } else {
-            Log.d(TAG, "btScanner is null")
+            Log.d(TAG, "BluetoothLeScanner is null")
         }
-
     }
 
-    private fun isLocationEnabled(): Boolean {
-        val locationManager = getSystemService(LOCATION_SERVICE) as LocationManager
-        return LocationManagerCompat.isLocationEnabled(locationManager)
-    }
-
-
-    @SuppressLint("MissingPermission")
     private fun bluetoothScanStop(bleScanCallback: BleScanCallback) {
-        Log.d(TAG, "btScan ...1")
+        Log.d(TAG, "Stopping Bluetooth scan...")
         if (btScanner != null) {
-            Log.d(TAG, "btScan ...2")
-            btScanner!!.stopScan(bleScanCallback)
-
+            permissionManager
+                .request(Permission.Bluetooth)
+                .rationale("Bluetooth permission is needed")
+                .checkPermission { isGranted ->
+                    if (isGranted) {
+                        Log.d(TAG, "Permissions granted, stop scan.")
+                        btScanner.stopScan(bleScanCallback)
+                    } else {
+                        Log.d(TAG, "Bluetooth permission not granted.")
+                    }
+                }
         } else {
-            Log.d(TAG, "btScanner is null")
+            Log.d(TAG, "BluetoothLeScanner is null")
         }
 
     }
 
-    @SuppressLint("MissingPermission")
-    val onScanResultAction: (ScanResult?) -> Unit = { result ->
-        Log.d(TAG, "onScanResultAction ")
 
-        val scanRecord = result?.scanRecord
-        val beacon = Beacon(result?.device?.address)
-        beacon.manufacturer = result?.device?.name
-        beacon.rssi = result?.rssi
-        //beacon.manufacturer == "ESP32 Beacon
-        if (scanRecord != null) {
-            scanRecord?.bytes?.let {
-                val parserBeacon = BeaconParser.parseIBeacon(it, beacon.rssi)
-                txtMessage.setText(parserBeacon.toString())
-            }
-        }
-
-    }
-
-    val onBatchScanResultAction: (MutableList<ScanResult>?) -> Unit = {
-        if (it != null) {
-            Log.d(TAG, "BatchScanResult " + it.toString())
-        }
-    }
-
-    val onScanFailedAction: (Int) -> Unit = {
-        Log.d(TAG, "ScanFailed " + it.toString())
-    }
-
-    private fun showPermissionDialog() {
-
+    private fun showPermissionDialog(title: String, message: String) {
         val builder: AlertDialog.Builder = AlertDialog.Builder(this)
-        builder.setTitle("Alerta")
-            .setMessage("El servicio de localizacion no esta activo")
-            .setPositiveButton("Close") { dialog, which ->
-                dialog.dismiss()
-            }
+        builder.setTitle(title)
+            .setMessage(message)
+            .setPositiveButton("Close") { dialog, _ -> dialog.dismiss() }
 
         if (alertDialog == null) {
             alertDialog = builder.create()
         }
 
-        if (!alertDialog!!.isShowing()) {
+        if (!alertDialog!!.isShowing) {
             alertDialog!!.show()
         }
     }
 
+    private fun createBleScanCallback(): BleScanCallback {
+        return BleScanCallback(
+            onScanResultAction,
+            onBatchScanResultAction,
+            onScanFailedAction
+        )
+    }
+
+    private val onScanResultAction: (ScanResult?) -> Unit = { result ->
+        Log.d(TAG, "onScanResultAction")
+
+        val scanRecord = result?.scanRecord
+        val beacon = Beacon(result?.device?.address).apply {
+            manufacturer = result?.device?.name
+            rssi = result?.rssi
+        }
+        Log.d(TAG, "Scan: $beacon")
+
+        scanRecord?.bytes?.let {
+            val parsedBeacon = BeaconParser.parseIBeacon(it, beacon.rssi)
+            txtMessage.text = parsedBeacon.toString()
+            var distance = parsedBeacon.calculateDistance(parsedBeacon.txPower!!, parsedBeacon.rssi!!, 3.0)
+            txtMessage.setText(txtMessage.text.toString() + "\n distance:\n$distance")
+            var distanceAverageFilter = parsedBeacon.calculateDistanceAverageFilter(parsedBeacon.txPower!!, parsedBeacon.rssi!!, 3.0)
+            txtMessage.setText(txtMessage.text.toString() + "\n distanceFilter:\n$distanceAverageFilter")
+
+        }
+    }
+
+    private val onBatchScanResultAction: (MutableList<ScanResult>?) -> Unit = {
+        Log.d(TAG, "BatchScanResult: ${it.toString()}")
+    }
+
+    private val onScanFailedAction: (Int) -> Unit = {
+        Log.d(TAG, "ScanFailed: $it")
+    }
 }

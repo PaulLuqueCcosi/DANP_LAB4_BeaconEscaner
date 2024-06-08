@@ -17,8 +17,8 @@ class BeaconParser {
             val iBeaconUUID = Utils.toHexString(data.copyOfRange(9, 25))
             val major = Integer.parseInt(Utils.toHexString(data.copyOfRange(25, 27)), 16)
             val minor = Integer.parseInt(Utils.toHexString(data.copyOfRange(27, 29)), 16)
-            val txPower = Integer.parseInt(Utils.toHexString(data.copyOfRange(29, 30)), 16)
-
+            val txPowerHex = Utils.toHexString(data.copyOfRange(29, 30))
+            val txPower = Integer.parseInt(txPowerHex, 16).toByte().toInt()
             //val factor = (-1 * txPower - rssi!!) / (10 * 4.0)
             //val distance = Math.pow(10.0, factor)
 
