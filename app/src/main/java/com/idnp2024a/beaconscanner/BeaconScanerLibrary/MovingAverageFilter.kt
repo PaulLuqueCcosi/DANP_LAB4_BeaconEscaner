@@ -6,8 +6,8 @@ import java.util.LinkedList
 class MovingAverageFilter(private val size: Int) {
     val distanceQueue = LinkedList<Double>()
     private val TAG = "MovingAverageFilter";
-    fun calculateDistance(txPower:Int, rssi: Int): Double {
-        val factor = (txPower - rssi) / (10 * 3.0)
+    fun calculateDistance(txPower:Int, rssi: Int, N: Double): Double {
+        val factor = (txPower - rssi) / (10 * N)
         val distance = Math.pow(10.0, factor)
         var movingAverage = distance
 

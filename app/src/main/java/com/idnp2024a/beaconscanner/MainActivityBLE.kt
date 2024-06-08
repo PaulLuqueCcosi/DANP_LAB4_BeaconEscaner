@@ -176,7 +176,7 @@ class MainActivityBLE : AppCompatActivity() {
         scanRecord?.bytes?.let {
             val parsedBeacon = BeaconParser.parseIBeacon(it, beacon.rssi)
             txtMessage.text = parsedBeacon.toString()
-            var distance = parsedBeacon.calculateDistance(parsedBeacon.txPower!!, parsedBeacon.rssi!!)
+            var distance = parsedBeacon.calculateDistance(parsedBeacon.txPower!!, parsedBeacon.rssi!!, 3.0)
             txtMessage.setText(txtMessage.text.toString() + "\n distance: $distance")
 
         }
